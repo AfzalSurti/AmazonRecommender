@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Amazon Product Recommender</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        body { background: #eef2f7; }
+        .brand-bar {
+            background: linear-gradient(90deg, #e94d2a 0%, #ff9000 70%);
+            color: #fff; padding: 1rem 0; margin-bottom: 30px; box-shadow: 0 2px 8px #e94d2a33;
+        }
+        .brand-bar h1 {letter-spacing:2px; font-size:2.5rem; margin:0;}
+        .hero--banner {
+            background: #fff2da; border-radius: 18px; box-shadow: 0 1px 16px #fdc38233;
+            padding: 30px 18px; margin-bottom: 30px;
+        }
+        .card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 2px 18px #f0b82733;
+            transition: transform 0.18s;
+        }
+        .card:hover {
+            transform: translateY(-7px) scale(1.03);
+            box-shadow: 0 8px 32px #e94d2a22;
+            border: 2px solid #ff9000;
+        }
+        .product-img {
+            height:220px; width:auto;
+            object-fit:contain;
+            border-radius:12px; box-shadow:0 2px 12px #eee;
+            display:block; margin:20px auto 12px auto;
+            background:white;
+        }
+        .card-title {font-size:1.13rem; min-height:60px;}
+        .amazon-btn {
+            background: linear-gradient(90deg,#f7971e,#ffd200);
+            border:none; color:#282828; font-weight:600; box-shadow:0 1px 8px #ffd20022;
+        }
+        .searchbox {
+            border-radius:12px; box-shadow:0 2px 12px #ffd20055;
+            font-size:1.2rem;
+        }
+        @media (max-width:600px){
+            .brand-bar h1 {font-size:1.5rem;}
+            .hero--banner {padding:16px;}
+        }
+    </style>
+</head>
+<body>
+    <div class="brand-bar text-center mb-4">
+        <h1>Amazon Product Recommendation</h1>
+    </div>
+
+    <div class="container mb-4">
+        <div class="hero--banner text-center">
+            <p style="font-size:1.22rem; color:#e94d2a; font-weight:600">
+                Find your perfect Amazon product—instantly.<br>
+                <span style="color:#ff9000">Type anything—brand, model, or even a typo!</span>
+            </p>
+            <form method="POST" class="mt-4 row justify-content-center">
+                <div class="col-12 col-sm-8 col-md-6 mb-2">
+                    <input class="form-control form-control-lg searchbox" type="text" name="product_name" placeholder="Search product..." value="{{ query }}" required>
+                <div class="col-12 col-sm-3 col-md-2 mb-2">
+                    <button class="btn amazon-btn btn-lg w-100" type="submit">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg" class="amazon-logo" alt="Amazon logo">
+                        &nbsp;Recommend!
+                    </button>
+                </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="container">
+        {% if recommendations is not none and not recommendations.empty %}
+            <h4 class="mb-3 text-success">Best Matches for <span class="text-warning fw-bold">"{{ query }}"</span></h4>
+            
+            <div class="row row-cols-1 row-cols-md-3 g-4">
+                {% for _, row in recommendations.iterrows() %}
+                    <div class="col">
+                        <div class="card h-100">
+                            <img src="{{ row['Image URL'] }}" class="product-img" alt="Product image">
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title">{{ row['Title'] }}</h5>
+                                <p class="card-text mb-1"><strong>Price:</strong> ₹{{ row['Price (INR)'] }}</p>
+                                <a href="{{ url_for('product_detail', idx=row['idx']) }}" class="btn amazon-btn mt-auto">Details</a>
+                                <a href="{{ row['Product Link'] }}" class="btn btn-outline-warning mt-2" target="_blank">Open on Amazon</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+        {% elif query %}
+            <div class="alert alert-danger mt-4">
+                Sorry, no close matches found for <strong>{{ query }}</strong>.
+            </div>
+        {% endif %}
+        <footer class="text-muted mt-5 small text-center opacity-75">
+            &copy; {{2025}} <span style="color:#e94d2a">Amazon Product Recommender</span> | Demo by Comet AI
+        </footer>
+    </div>
+</body>
+</html>
