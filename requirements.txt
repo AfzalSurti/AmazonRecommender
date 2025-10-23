@@ -1,0 +1,10 @@
+Flask
+pandas
+numpy
+selenium
+beautifulsoup4
+sentence-transformers
+scikit-learn
+rapidfuzz
+gunicorn
+requests
