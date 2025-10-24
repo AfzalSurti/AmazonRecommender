@@ -65,19 +65,60 @@ cd Amazon-Web-Scrapper
 ### 2️⃣ Install Dependencies
 pip install -r requirements.txt
 
-project/
-|──data/
+Amazon_Recommender/
+│
+├── data/
+│   ├── raw/                  # CSVs scraped from Amazon (e.g., laptops_products.csv)
+│   ├── processed/            # Cleaned & merged CSVs stored here
+│
 ├── models/
-│ ├── products_master.csv
-│ ├── embeddings.npy
-│ └── sentence_model/ 
-├── templates/
-│ ├── index.html
-│ └── product.html
-├── app_symentic.py
-├── requirements.txt
-└── README.md
+│   ├── tfidf_model.pkl       # TF-IDF model file
+│   ├── cosine_sim.npy        # Similarity matrix
+│
+├── scripts/
+│   ├── 1_data_preprocessing.py
+│   ├── 2_train_model.py
+│   ├── 3_test_recommender.py
+│
+├── scrapping/
+|   ├── scrapping_all_products.py
+|
+├── results/
+│   ├── recommendations.csv   # Output examples of the model
+│
+├── templates/                # Frontend
+│   ├──index.html
+|   ├──product.html
+|
+├──app_symentic.py - main backend logic
+├── requirements.txt          # Project dependencies
+├── README.md                 # Documentation
 
+
+data- it has two folders 
+      1-raw - a raw datsets that is a amazon data categories wise that i   genrate using the selenium , bs4 .
+      2-processed -  then i merged it all raw datasets which are categorie wise
+
+models- I take  a model "all-MiniLM-L6-v2" and train on that products_master.csv dataset
+        and compute embeddings and save artifacts in a models/.
+
+results - after training i have to check model is working or not so 
+          i run 3_test_recommender_symentic.py and it genrates the output in a results/recommendatios.csv.
+
+scapping - in a scraping theres a script scrapping_all_products.py its a script to 
+            get product from amazon site categori wise.
+
+scripts - in a scripts folder there are 3 scripts one for merging , one for training , 
+          one for testing  , and one script is for adding categori column in a master datset.
+
+templates - contains frontend file index.html - home page and product.html - product 
+            display page .
+
+app_symentic.py - main backend logic is there using flask first load the model 
+                  and interprets the input and give corrosponding output and also routings are there.
+
+Procfile - i have to deploye this on render so server sould know which commands to run so 
+            i put that command in it.
 
 ### 4️⃣ Run Flask App
 python app_symentic.py
