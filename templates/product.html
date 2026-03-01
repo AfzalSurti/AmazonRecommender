@@ -33,6 +33,27 @@
                 </div>
             </div>
         </article>
+
+        <section class="analysis-card mt-4" id="productAnalysisPanel" data-idx="{{ idx }}">
+            <div class="chat-title-row mb-2">
+                <h5 class="mb-0">AI Product Analysis</h5>
+                <span class="chat-badge">Live</span>
+            </div>
+            <div id="productAnalysisText" class="analysis-text">Generating analysis...</div>
+        </section>
+
+        <section class="chat-card mt-4" id="productChatPanel" data-context='{{ chat_context | tojson }}'>
+            <div class="chat-title-row">
+                <h5 class="mb-0">Ask AI about this product</h5>
+                <span class="chat-badge">Context-aware</span>
+            </div>
+            <p class="chat-help mb-3">Examples: “Is this worth the price?”, “What are possible drawbacks?”, “Who should buy this?”</p>
+            <div id="productChatMessages" class="chat-messages"></div>
+            <form id="productChatForm" class="chat-form mt-3">
+                <input id="productChatInput" class="form-control" type="text" placeholder="Ask anything about this product..." required>
+                <button class="btn amazon-btn" type="submit">Send</button>
+            </form>
+        </section>
     </main>
 
     <footer class="footer-bar text-center">
@@ -40,5 +61,68 @@
             <span>&copy; 2026 Amazon Product Recommender</span>
         </div>
     </footer>
+
+    <script>
+        (function () {
+            const analysisPanel = document.getElementById("productAnalysisPanel");
+            const analysisText = document.getElementById("productAnalysisText");
+            if (analysisPanel && analysisText) {
+                const idx = analysisPanel.dataset.idx;
+                fetch(`/api/analyze-product/${idx}`)
+                    .then((response) => response.json())
+                    .then((data) => {
+                        analysisText.textContent = data.analysis || data.error || "Analysis unavailable.";
+                    })
+                    .catch(() => {
+                        analysisText.textContent = "Could not load analysis right now.";
+                    });
+            }
+
+            const panel = document.getElementById("productChatPanel");
+            if (!panel) {
+                return;
+            }
+
+            const form = document.getElementById("productChatForm");
+            const input = document.getElementById("productChatInput");
+            const messages = document.getElementById("productChatMessages");
+            const contextText = JSON.parse(panel.dataset.context || '""');
+
+            const appendMessage = (text, role) => {
+                const item = document.createElement("div");
+                item.className = `chat-msg ${role}`;
+                item.textContent = text;
+                messages.appendChild(item);
+                messages.scrollTop = messages.scrollHeight;
+            };
+
+            appendMessage("Hi! I can answer questions about this product.", "assistant");
+
+            form.addEventListener("submit", async (event) => {
+                event.preventDefault();
+                const message = input.value.trim();
+                if (!message) {
+                    return;
+                }
+
+                appendMessage(message, "user");
+                input.value = "";
+                appendMessage("Thinking...", "assistant");
+                const pendingNode = messages.lastElementChild;
+
+                try {
+                    const response = await fetch("/api/chat", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ message, context: contextText }),
+                    });
+                    const data = await response.json();
+                    pendingNode.textContent = data.answer || data.error || "No response available.";
+                } catch (error) {
+                    pendingNode.textContent = "Unable to contact chat service right now.";
+                }
+            });
+        })();
+    </script>
 </body>
 </html>

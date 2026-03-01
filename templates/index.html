@@ -18,14 +18,14 @@
 
     <main class="container pb-5">
         <section class="hero-banner mb-4">
-            <div class="row align-items-center g-3">
-                <div class="col-12 col-lg-7">
+            <div class="row justify-content-center g-3">
+                <div class="col-12 text-center">
                     <h2 class="hero-title mb-2">Find the right product in seconds</h2>
                     <p class="hero-text mb-0">Search by name, model, or category. Results are ranked using semantic similarity and ready to open on Amazon.</p>
                 </div>
-                <div class="col-12 col-lg-5">
-                    <form method="GET" action="{{ url_for('home') }}" class="search-form">
-                        <div class="input-group input-group-lg">
+                <div class="col-12">
+                    <form method="GET" action="{{ url_for('home') }}" class="search-form centered-search-form">
+                        <div class="mb-3">
                             <input
                                 class="form-control searchbox"
                                 type="text"
@@ -34,7 +34,9 @@
                                 value="{{ query }}"
                                 required
                             >
-                            <button class="btn amazon-btn" type="submit">Search</button>
+                        </div>
+                        <div class="text-center search-btn-wrap">
+                            <button class="btn amazon-btn search-btn" type="submit">Search</button>
                         </div>
                     </form>
                 </div>
@@ -47,6 +49,9 @@
                     <h4 class="mb-0">Results for "{{ query }}"</h4>
                     <span class="result-badge">{{ total }} products found</span>
                 </div>
+                {% if optimized_query and optimized_query != query %}
+                    <p class="optimized-note mt-2 mb-0">AI optimized query: <strong>{{ optimized_query }}</strong></p>
+                {% endif %}
             </section>
 
             <section class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
@@ -84,6 +89,21 @@
                 </nav>
             {% endif %}
 
+            {% if chat_context %}
+                <section class="chat-card mt-4" id="resultsChatPanel" data-context='{{ chat_context | tojson }}'>
+                    <div class="chat-title-row">
+                        <h5 class="mb-0">Ask AI about these results</h5>
+                        <span class="chat-badge">Context-aware</span>
+                    </div>
+                    <p class="chat-help mb-3">Examples: “Which is best value?”, “Compare top 3 options”, “Best option under a budget?”</p>
+                    <div id="resultsChatMessages" class="chat-messages"></div>
+                    <form id="resultsChatForm" class="chat-form mt-3">
+                        <input id="resultsChatInput" class="form-control" type="text" placeholder="Ask about these recommendations..." required>
+                        <button class="btn amazon-btn" type="submit">Send</button>
+                    </form>
+                </section>
+            {% endif %}
+
         {% elif query %}
             <div class="alert alert-warning border-0 mt-2 no-results">
                 No close matches found for <strong>{{ query }}</strong>. Try a broader keyword.
@@ -96,5 +116,54 @@
             <span>&copy; 2026 Amazon Product Recommender</span>
         </div>
     </footer>
+
+    <script>
+        (function () {
+            const panel = document.getElementById("resultsChatPanel");
+            if (!panel) {
+                return;
+            }
+
+            const form = document.getElementById("resultsChatForm");
+            const input = document.getElementById("resultsChatInput");
+            const messages = document.getElementById("resultsChatMessages");
+            const contextText = JSON.parse(panel.dataset.context || '""');
+
+            const appendMessage = (text, role) => {
+                const item = document.createElement("div");
+                item.className = `chat-msg ${role}`;
+                item.textContent = text;
+                messages.appendChild(item);
+                messages.scrollTop = messages.scrollHeight;
+            };
+
+            appendMessage("Hi! Ask me anything about these results.", "assistant");
+
+            form.addEventListener("submit", async (event) => {
+                event.preventDefault();
+                const message = input.value.trim();
+                if (!message) {
+                    return;
+                }
+
+                appendMessage(message, "user");
+                input.value = "";
+                appendMessage("Thinking...", "assistant");
+                const pendingNode = messages.lastElementChild;
+
+                try {
+                    const response = await fetch("/api/chat", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ message, context: contextText }),
+                    });
+                    const data = await response.json();
+                    pendingNode.textContent = data.answer || data.error || "No response available.";
+                } catch (error) {
+                    pendingNode.textContent = "Unable to contact chat service right now.";
+                }
+            });
+        })();
+    </script>
 </body>
 </html>

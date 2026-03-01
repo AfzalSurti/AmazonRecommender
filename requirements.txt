@@ -8,3 +8,4 @@ scikit-learn
 rapidfuzz
 gunicorn
 requests
+python-dotenv
