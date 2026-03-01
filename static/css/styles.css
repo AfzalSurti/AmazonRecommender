@@ -50,13 +50,29 @@ body {
   color: var(--text-muted);
 }
 
+.centered-search-form {
+  width: min(900px, 100%);
+  margin: 0.5rem auto 0;
+}
+
 .searchbox {
   border: 1px solid rgba(255, 255, 255, 0.15);
   background: rgba(255, 255, 255, 0.95);
+  min-height: 64px;
+  font-size: 1.2rem;
+  border-radius: 0.9rem;
+  padding-inline: 1rem;
 }
 
 .search-btn {
-  min-width: 180px;
+  min-width: 220px;
+  min-height: 54px;
+  font-size: 1.08rem;
+  border-radius: 0.85rem;
+}
+
+.search-btn-wrap {
+  padding-top: 0.1rem;
 }
 
 .amazon-btn {
@@ -260,6 +276,17 @@ body {
   .hero-banner,
   .details-card {
     padding: 1rem;
+  }
+
+  .searchbox {
+    min-height: 56px;
+    font-size: 1.05rem;
+  }
+
+  .search-btn {
+    min-width: 180px;
+    min-height: 48px;
+    font-size: 1rem;
   }
 
   .product-img {
