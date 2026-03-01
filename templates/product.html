@@ -29,7 +29,7 @@
                 {% endif %}
                 <div class="d-flex flex-wrap gap-2">
                     <a href="{{ product['Product Link'] }}" class="btn amazon-btn btn-lg" target="_blank" rel="noopener noreferrer">Buy on Amazon</a>
-                    <a href="{{ url_for('home') }}" class="btn btn-outline-light amazon-outline btn-lg">Back to Search</a>
+                    <a href="{{ url_for('home', product_name=return_query, page=return_page) if return_query else url_for('home') }}" class="btn btn-outline-light amazon-outline btn-lg">Back to Search</a>
                 </div>
             </div>
         </article>

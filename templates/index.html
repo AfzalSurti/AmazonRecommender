@@ -35,8 +35,11 @@
                                 required
                             >
                         </div>
-                        <div class="text-center search-btn-wrap">
+                        <div class="text-center search-btn-wrap d-flex justify-content-center gap-2 flex-wrap">
                             <button class="btn amazon-btn search-btn" type="submit">Search</button>
+                            {% if query %}
+                                <a href="{{ url_for('home') }}" class="btn btn-outline-light amazon-outline search-btn">Clear Results</a>
+                            {% endif %}
                         </div>
                     </form>
                 </div>
@@ -64,7 +67,7 @@
                                 <h5 class="card-title">{{ row['Title'] }}</h5>
                                 <p class="price mb-3">₹{{ row['Price (INR)'] }}</p>
                                 <div class="mt-auto d-grid gap-2">
-                                    <a href="{{ url_for('product_detail', idx=row['idx']) }}" class="btn amazon-btn">View Details</a>
+                                    <a href="{{ url_for('product_detail', idx=row['idx'], product_name=query, page=page) }}" class="btn amazon-btn">View Details</a>
                                     <a href="{{ row['Product Link'] }}" class="btn btn-outline-light amazon-outline" target="_blank" rel="noopener noreferrer">Open on Amazon</a>
                                 </div>
                             </div>

@@ -8,11 +8,32 @@ from sklearn.metrics.pairwise import cosine_similarity
 from rapidfuzz import process, fuzz
 import requests
 
+
+def load_env_file_fallback(path=".env"):
+    if not os.path.exists(path):
+        return
+    try:
+        with open(path, "r", encoding="utf-8") as env_file:
+            for raw_line in env_file:
+                line = raw_line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, value = line.split("=", 1)
+                key = key.strip()
+                value = value.strip().strip('"').strip("'")
+                if key and key not in os.environ:
+                    os.environ[key] = value
+    except Exception:
+        pass
+
+
 try:
     from dotenv import load_dotenv
     load_dotenv()
 except Exception:
-    pass
+    load_env_file_fallback()
+
+LAST_GROQ_ERROR = ""
 
 app = Flask(__name__)
 
@@ -27,7 +48,10 @@ titles = df["Title"].astype(str).tolist()
 
 
 def call_groq_chat(system_prompt, user_prompt, max_tokens=220, temperature=0.2):
+    global LAST_GROQ_ERROR
+
     if not GROQ_API_KEY:
+        LAST_GROQ_ERROR = "Missing GROQ_API_KEY."
         return None
 
     headers = {
@@ -48,8 +72,24 @@ def call_groq_chat(system_prompt, user_prompt, max_tokens=220, temperature=0.2):
         response = requests.post(GROQ_CHAT_URL, headers=headers, json=payload, timeout=25)
         response.raise_for_status()
         data = response.json()
-        return data["choices"][0]["message"]["content"].strip()
-    except Exception:
+        answer = data["choices"][0]["message"].get("content", "").strip()
+        if not answer:
+            LAST_GROQ_ERROR = "Model returned empty content."
+            return None
+        LAST_GROQ_ERROR = ""
+        return answer
+    except requests.exceptions.HTTPError as exc:
+        status_code = exc.response.status_code if exc.response is not None else "unknown"
+        body_preview = ""
+        if exc.response is not None and exc.response.text:
+            body_preview = exc.response.text[:180]
+        LAST_GROQ_ERROR = f"Groq HTTP {status_code}. {body_preview}".strip()
+        return None
+    except requests.exceptions.RequestException as exc:
+        LAST_GROQ_ERROR = f"Groq network error: {exc}"
+        return None
+    except Exception as exc:
+        LAST_GROQ_ERROR = f"Unexpected AI error: {exc}"
         return None
 
 
@@ -60,13 +100,15 @@ def optimize_query_with_groq(raw_query):
     optimized = call_groq_chat(
         system_prompt=(
             "You optimize e-commerce product search queries. "
-            "Return only one concise query string with no extra text."
+            "Return only one concise query string with corrected spelling and key product attributes. "
+            "Do not add explanation, markdown, or quotes."
         ),
         user_prompt=(
             "Rewrite this search into a clean Amazon-style product query while preserving intent. "
+            "Keep it under 12 words. "
             f"Query: {raw_query}"
         ),
-        max_tokens=40,
+        max_tokens=120,
         temperature=0,
     )
 
@@ -187,9 +229,24 @@ def home():
 def product_detail(idx):
     if idx < 0 or idx >= len(df):
         return redirect(url_for('home'))
+
+    return_query = (request.args.get("product_name") or "").strip()
+    return_page_raw = (request.args.get("page") or "1").strip()
+    try:
+        return_page = max(1, int(return_page_raw))
+    except ValueError:
+        return_page = 1
+
     item = df.iloc[idx]
     chat_context = format_product_context(item)
-    return render_template("product.html", product=item, idx=idx, chat_context=chat_context)
+    return render_template(
+        "product.html",
+        product=item,
+        idx=idx,
+        chat_context=chat_context,
+        return_query=return_query,
+        return_page=return_page,
+    )
 
 
 @app.route("/api/analyze-product/<int:idx>", methods=["GET"])
@@ -230,7 +287,10 @@ def chat_with_context():
     )
 
     if not answer:
-        answer = "I could not reach the AI service right now. Please try again in a moment."
+        answer = (
+            "I could not reach the AI service right now. "
+            f"Reason: {LAST_GROQ_ERROR or 'Temporary service issue.'}"
+        )
 
     return jsonify({"answer": answer})
 
