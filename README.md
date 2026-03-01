@@ -154,6 +154,35 @@ Read  `requirements.txt`
 
 ---
 
+## 🖼️ Project Screenshots
+
+### 1) Home Page
+![Home Page](IMAGES/1.png)
+
+This screen shows the landing page with the search bar and quick product search flow.
+
+### 2) Search Results
+![Search Results](IMAGES/2.png)
+
+This screen displays semantic search results, product cards, pricing, and pagination.
+
+### 3) Product Details
+![Product Details](IMAGES/3.png)
+
+This screen shows detailed product information with direct Amazon redirect and context data.
+
+### 4) AI Product Analysis
+![AI Product Analysis](IMAGES/4.png)
+
+This screen highlights AI-generated product analysis with summary, pros, and buying guidance.
+
+### 5) Contextual Chat
+![Contextual Chat](IMAGES/5.png)
+
+This screen demonstrates context-aware chat where users can ask follow-up product questions.
+
+---
+
 ## 🧠 What You’ll Learn
 - How modern e‑commerce recommendation systems understand intent.
 - How to apply transformer models for semantic understanding.

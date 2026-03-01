@@ -1,5 +1,9 @@
 Flask
 pandas
+numpy
+sentence-transformers
+scikit-learn
+rapidfuzz
 requests
 gunicorn
 python-dotenv

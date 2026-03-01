@@ -1,4 +1,5 @@
 import os
+import time
 
 from flask import Flask, jsonify, render_template, request, redirect, url_for
 import pandas as pd
@@ -39,6 +40,7 @@ app = Flask(__name__)
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "").strip()
 MODEL_NAME = os.getenv("MODEL_NAME", "").strip() or "llama-3.1-8b-instant"
+MODEL_FALLBACK_NAME = os.getenv("MODEL_FALLBACK_NAME", "").strip() or "llama-3.1-70b-versatile"
 GROQ_CHAT_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 df = pd.read_csv("models/products_master.csv")
@@ -58,8 +60,7 @@ def call_groq_chat(system_prompt, user_prompt, max_tokens=220, temperature=0.2):
         "Authorization": f"Bearer {GROQ_API_KEY}",
         "Content-Type": "application/json",
     }
-    payload = {
-        "model": MODEL_NAME,
+    base_payload = {
         "messages": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
@@ -68,16 +69,62 @@ def call_groq_chat(system_prompt, user_prompt, max_tokens=220, temperature=0.2):
         "temperature": temperature,
     }
 
+    def extract_answer(data):
+        choices = data.get("choices") or []
+        if not choices:
+            return ""
+
+        message = choices[0].get("message") or {}
+        content = message.get("content")
+
+        if isinstance(content, str):
+            return content.strip()
+
+        if isinstance(content, list):
+            parts = []
+            for part in content:
+                if isinstance(part, dict):
+                    text = part.get("text")
+                    if isinstance(text, str) and text.strip():
+                        parts.append(text.strip())
+                elif isinstance(part, str) and part.strip():
+                    parts.append(part.strip())
+            return "\n".join(parts).strip()
+
+        text_fallback = choices[0].get("text")
+        if isinstance(text_fallback, str):
+            return text_fallback.strip()
+
+        return ""
+
     try:
-        response = requests.post(GROQ_CHAT_URL, headers=headers, json=payload, timeout=25)
-        response.raise_for_status()
-        data = response.json()
-        answer = data["choices"][0]["message"].get("content", "").strip()
-        if not answer:
-            LAST_GROQ_ERROR = "Model returned empty content."
-            return None
-        LAST_GROQ_ERROR = ""
-        return answer
+        candidate_models = []
+        for model_name in [MODEL_NAME, MODEL_FALLBACK_NAME]:
+            if model_name and model_name not in candidate_models:
+                candidate_models.append(model_name)
+
+        for model_name in candidate_models:
+            for attempt in range(2):
+                current_payload = dict(base_payload)
+                current_payload["model"] = model_name
+                if attempt == 1:
+                    current_payload["temperature"] = 0
+                    current_payload["max_tokens"] = max(max_tokens, 96)
+
+                response = requests.post(GROQ_CHAT_URL, headers=headers, json=current_payload, timeout=25)
+                response.raise_for_status()
+                data = response.json()
+                answer = extract_answer(data)
+
+                if answer:
+                    LAST_GROQ_ERROR = ""
+                    return answer
+
+                if attempt == 0:
+                    time.sleep(0.6)
+
+        LAST_GROQ_ERROR = "AI returned an empty reply from all configured models."
+        return None
     except requests.exceptions.HTTPError as exc:
         status_code = exc.response.status_code if exc.response is not None else "unknown"
         body_preview = ""
@@ -187,6 +234,11 @@ def get_recommendations(query, top_n=300):
     # Only top_n if desired, otherwise return all
     return results.head(top_n)
 
+
+@app.get("/health")
+def health():
+    return jsonify({"status": "ok"})
+
 @app.route("/", methods=["GET","POST"])
 def home():
     query = request.form.get("product_name", "") if request.method == "POST" else request.args.get("product_name", "")
@@ -288,8 +340,8 @@ def chat_with_context():
 
     if not answer:
         answer = (
-            "I could not reach the AI service right now. "
-            f"Reason: {LAST_GROQ_ERROR or 'Temporary service issue.'}"
+            "AI reply is temporarily unavailable. "
+            "Please try once again in a few seconds."
         )
 
     return jsonify({"answer": answer})
