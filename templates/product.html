@@ -3,15 +3,20 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ product['Title'] }} | Product Detail</title>
+    <title>Amazon Recommender | {{ product['Title'] }} details, analysis & chat</title>
+    <meta name="description" content="View product details with AI analysis and contextual chat inside Amazon Recommender.">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='images/amazon-recommender-logo.svg') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
     <header class="brand-bar text-center mb-4">
-        <div class="container py-2">
-            <h1 class="brand-title mb-2">Amazon Product Recommender</h1>
-            <p class="brand-subtitle mb-0">Product detail view</p>
+        <div class="container py-2 brand-wrap">
+            <img src="{{ url_for('static', filename='images/amazon-recommender-logo.svg') }}" class="brand-logo" alt="Amazon Recommender logo">
+            <div class="brand-text-wrap">
+                <h1 class="brand-title mb-1">Amazon Product Recommender</h1>
+                <p class="brand-subtitle mb-0">Product detail view with AI analysis and contextual assistant</p>
+            </div>
         </div>
     </header>
 

@@ -22,6 +22,24 @@ body {
   box-shadow: var(--shadow);
 }
 
+.brand-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+}
+
+.brand-text-wrap {
+  text-align: left;
+}
+
+.brand-logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(17, 24, 39, 0.25);
+}
+
 .brand-title {
   letter-spacing: 0.5px;
   font-weight: 800;
@@ -269,6 +287,20 @@ body {
 }
 
 @media (max-width: 768px) {
+  .brand-wrap {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .brand-text-wrap {
+    text-align: center;
+  }
+
+  .brand-logo {
+    width: 48px;
+    height: 48px;
+  }
+
   .brand-title {
     font-size: 1.5rem;
   }
