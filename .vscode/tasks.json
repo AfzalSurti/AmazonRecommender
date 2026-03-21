@@ -1,0 +1,24 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run Amazon Scrapper Flask App",
+			"type": "shell",
+			"command": "d:\\Amazon-Web-Scrapper\\.venv\\Scripts\\python.exe",
+			"args": [
+				"app_symentic.py"
+			],
+			"isBackground": true
+		},
+		{
+			"label": "Run app_symentic on 5050",
+			"type": "shell",
+			"command": "d:\\Amazon-Web-Scrapper\\.venv\\Scripts\\python.exe",
+			"args": [
+				"-c",
+				"import app_symentic as m; m.app.run(host='0.0.0.0', port=5050, debug=False)"
+			],
+			"isBackground": true
+		}
+	]
+}
