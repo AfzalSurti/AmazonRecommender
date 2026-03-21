@@ -19,6 +19,28 @@
 				"import app_symentic as m; m.app.run(host='0.0.0.0', port=5050, debug=False)"
 			],
 			"isBackground": true
+		},
+		{
+			"label": "Run app via run_app.bat",
+			"type": "shell",
+			"command": "d:\\Amazon-Web-Scrapper\\run_app.bat",
+			"isBackground": true
+		},
+		{
+			"label": "Run app via cmd batch",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"d:\\Amazon-Web-Scrapper\\run_app.bat"
+			],
+			"isBackground": true
+		},
+		{
+			"label": "Start project with one script",
+			"type": "shell",
+			"command": "d:\\Amazon-Web-Scrapper\\run_app.bat",
+			"isBackground": true
 		}
 	]
 }
